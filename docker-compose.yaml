@@ -1,0 +1,7 @@
+services:
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=nwosupaul141@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=testingdb
+      - "8082:80"
