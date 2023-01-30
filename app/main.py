@@ -5,11 +5,11 @@ from scrape import capture_data
 
 def main():
 
-    df = capture_data
+    df = capture_data()
 
-    engine = connect.get_connection()
+    engine = get_connection()
 
-    data.to_sql(name = 'yahoofinance', con = engine, if_exists = 'append')
+    df.to_sql(name = 'yahoofinance', con = engine, if_exists = 'append')
     
     engine.connect().close()
 
