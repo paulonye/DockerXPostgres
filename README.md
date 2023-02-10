@@ -9,7 +9,7 @@
 >
 >[Link to the Yahoo Finance Website](https://finance.yahoo.com/crypto/?.tsrc=fin-srch&offset=0&count=15)
 >
->[Link to the Medium Article](https://medium.com/@nwosupaul141/deployment-of-containerized-data-applications-on-google-cloud-run-pt1-80750dce02f8) 
+>[Link to the Medium Article](https://medium.com/@nwosupaul141/batching-web-data-into-a-postgres-database-hosted-on-google-cloud-15af1674cdb3) 
 
 ## Project Structure
 
@@ -20,7 +20,7 @@
 - Deploying the Container on Cloud Run
 - Conclusion
 
-![Cover_Image](https://storage.googleapis.com/images-xlr1001/cover4.png)
+![Cover_Image](https://nwosupaulonye.s3.amazonaws.com/cover4.png)
  
 ## Set up your environment
 Clone the Github Repo 
