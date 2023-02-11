@@ -3,11 +3,16 @@ from bs4 import BeautifulSoup
 from time import sleep
 import requests
 import datetime
+from datetime import timedelta
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from time import sleep
 from selenium.common.exceptions import TimeoutException
+
+from prefect import flow, task
+from prefect.tasks import task_input_hash
+from prefect_sqlalchemy import SqlAlchemyConnector
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -19,28 +24,14 @@ chrome_prefs["profile.default_content_settings"] = {"images": 2}
 
 driver = webdriver.Chrome(options=chrome_options)
 
-#########################################
-# options = Options()
-# options.headless = True
-
-# driver = webdriver.Chrome("/usr/bin/chromedriver", options=options)
-
-
 ##########################################################################
 
-def capture_data():
+@task(log_prints=True, tags=["extract"])
+def capture_data(url: str) -> pd.DataFrame:
     
-    """This function is used to capture the data from Yahoo Finance"""
-    
-    url = 'https://finance.yahoo.com/crypto/?.tsrc=fin-srch&offset=0&count=15'
+    """This function is used to extract data from Yahoo Finance"""
     driver.get(url)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    
-    #this prints out the current timestamp of your machine at the time the data was captured
-    #you should note that since we are using a remote machine, there will be time differences
-    #for me, based on the time I selected, my local time(WAT) is one hour ahead
-    current_time = datetime.datetime.now()
-    current_timestamp = pd.Timestamp(current_time.strftime('%Y-%m-%d %H:%M'))
     
     name = []
     price = []
@@ -59,7 +50,15 @@ def capture_data():
         
         
     df = pd.DataFrame({'name':name, 'price':price, 'market_cap':market_cap})
-    
+
+    return df
+
+@task(log_prints=True, tags=['Transform'])  
+def trans_df(df: pd.DataFrame) -> pd.DataFrame:
+
+    current_time = datetime.datetime.now()
+    current_timestamp = pd.Timestamp(current_time.strftime('%Y-%m-%d %H:%M'))
+
     df['date'] = current_timestamp
 
     #some basic data cleaning steps to ensure the data comes out in the right format
@@ -83,7 +82,38 @@ def capture_data():
     
     return df
 
+@task(log_prints=True, tags=['Load'])
+def batch(df: pd.DataFrame, tablename: str) -> None:
+    
+    connection_block = SqlAlchemyConnector.load("postgres-connector")
+    with connection_block.get_connection(begin=False) as engine:
+
+        df.to_sql(name=tablename, con=engine, if_exists='append')
+
+        print('Batch Successful')
+
+        engine.connect().close()
+
+@flow(name='Yah-Postgres-ETL')
+def main(url: str, tablename: str):
+
+    url = url
+
+    tablename = tablename
+
+    data = capture_data(url)
+
+    df = trans_df(data)
+
+    batch(df, tablename)
+
 if __name__ == '__main__':
-    print(capture_data())
+
+    url = 'https://finance.yahoo.com/crypto/?.tsrc=fin-srch&offset=0&count=15'
+
+    tablename = 'batchpg1'
+
+    main(url, tablename)
+    
     
 
