@@ -1,3 +1,6 @@
 .env
 app/__pycache__/
 key.json
+env/
+prefect/.prefectignore
+prefect/__pycache__/
